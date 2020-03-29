@@ -2,8 +2,6 @@ input_file: data.csv
 output_method: console
 aggregate:
   area: state
-    state: GROUP(counties)
-    region: GROUP(states)
   fields:
     - cases
     - deaths
