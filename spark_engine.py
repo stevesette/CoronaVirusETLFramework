@@ -26,3 +26,13 @@ class SparkEngine:
         data2 = self.data[name2]
         self.data[new_name] = data1.join(data2, list_of_col_pairs)
         return
+
+    def group_by(self, df_name, field, new_name):
+        self.data[new_name] = self.data[df_name].groupBy(field).collect()
+        return
+
+    def aggregate(self, df_name, agg_type, col_name):
+        d = {'max', 'min', 'avg', 'sum',}
+
+    def limit(self, df_name, top_n):
+        return self.data[df_name]
