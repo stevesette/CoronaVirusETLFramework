@@ -13,18 +13,22 @@ def read_config(filepath):
 fields = []
 
 def window_checker(filepath):
-    data = read_config(filepath)
+    data = read_config(filepath) #Once main handler is created, this will take a dictionary instead of path
     if 'window' not in data.keys():
         return True
     if 'window' in data.keys():
-        if date_checker(data['window']):
-            if timing_checker(data['window']):
-                return True
+        if 'start_date' in data['window'].keys() and 'end_date' in data['window'].keys():
+            if date_checker(data['window']):
+                if timing_checker(data['window']):
+                    return True
+                else:
+                    print('Your end_date comes before your start_date. Correct the issue in order to proceed.')
+                    return False
             else:
-                print('Your end_date comes before your start_date. Correct the issue in order to proceed.')
+                print('One or both of your dates is invalid. Reformat to follow: mm/dd/yyyy')
                 return False
         else:
-            print('One or both of your dates is invalid. Reformat to follow: mm/dd/yyyy')
+            print('Window is missing \'start_date\' and/or \'end_date\'')
             return False
 
 def date_checker(date_data):
