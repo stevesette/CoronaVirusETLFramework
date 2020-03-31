@@ -1,13 +1,8 @@
 input_file: data.csv
 output_method: console
 aggregate:
-  area: state
-  fields:
-    - cases
-    - deaths
-    - recoveries
-    - mortality_rate
-    - recovery_rate
+  area: region
+  max:
+    - new_cases
+    - new_deaths
 top_n: 15
-most_least: most
-rank_field: cases
