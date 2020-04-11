@@ -1,16 +1,32 @@
 input_file: data.csv
 output_method: console
-window:
-  start_date: 03/01/2020
-  end_date: 03/15/2020
 aggregate:
   area: region
-  fields:
+  window:
+    start_date: 03/01/2020
+    end_date: 03/15/2020
+  min:
+    - new_cases
+    - new_deaths
+    - new_recoveries
+    - mortality_rate_delta
+    - recovery_rate_delta
+  max:
+    - new_cases
+    - new_deaths
+    - new_recoveries
+    - mortality_rate_delta
+    - recovery_rate_delta
+  mean:
+    - new_cases
+    - new_deaths
+    - new_recoveries
+    - mortality_rate_delta
+    - recovery_rate_delta
+  sum:
     - new_cases
     - new_deaths
     - new_recoveries
     - mortality_rate_delta
     - recovery_rate_delta
 top_n: 10
-most_least: least
-rank_field: new_deaths

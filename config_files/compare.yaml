@@ -1,9 +1,9 @@
 input_file: data.csv
 output_method: console
-window:
-  start_date: 03/01/2020
-  end_date: 03/15/2020
 aggregate:
+  window:
+    start_date: 03/01/2020
+    end_date: 03/15/2020
   area: state
     compare:
       - Washington
