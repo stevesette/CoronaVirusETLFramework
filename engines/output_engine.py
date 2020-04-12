@@ -1,4 +1,4 @@
-aclass output:
+class output:
     def __init__(self, df):
         df = self.df
 
