@@ -7,17 +7,25 @@ aggregate:
   min:
     - total_tests
     - positive_tests
-    - infection_rate
+    - negative_tests
+    - test_positive_rate
+    - test_negative_rate
   max:
     - total_tests
     - positive_tests
-    - infection_rate
+    - negative_test
+    - test_positive_rate
+    - test_negative_rate
   mean:
     - total_tests
     - positive_tests
-    - infection_rate
+    - negative_test
+    - test_positive_rate
+    - test_negative_rate
   sum:
     - total_tests
     - positive_tests
-    - infection_rate
+    - negative_test
+    - test_positive_rate
+    - test_negative_rate
 top_n: 10

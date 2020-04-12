@@ -4,4 +4,6 @@ aggregate:
   max:
     - new_cases
     - new_deaths
+    - total_tests
+    - positive_tests
   top_n: 15
