@@ -1,4 +1,3 @@
-input_file: data.csv
 output_method: console
 aggregate:
   window:
