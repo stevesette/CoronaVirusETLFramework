@@ -12,30 +12,39 @@ def read_config(filepath):
     return data
 
 
-# This will contain all possible field names from our datasets, once they're finished
-counties_fields = ['new_cases', 'new_deaths', 'cases', 'deaths', 'recoveries',
-                   'mortality_rate', 'recovery_rate', 'new_recoveries',
-                   'mortality_rate_delta', 'recovery_rate_delta']
+fields = {
+    'counties':
+        ['county', 'new_cases', 'new_deaths', 'cases', 'deaths',
+         'mortality_rate', 'mortality_rate_delta', 'new_cases_delta',
+         'new_deaths_delta', 'recoveries', 'recovery_rate'],
+    'tests':
+        ['positive', 'positive_tests', 'negative', 'totalResults',
+         'total_tests', 'negative_tests', 'test_positive_rate', 'test_negative_rate']
+}
+categories = ['min', 'max', 'mean', 'sum', 'fields']
 
-tests_fields = ['state', 'date', 'positive', 'negative', 'totalResults', 'pending',
-                'totalTests', 'hospitalizedCurrently', 'hospitalizedCumulative']
-'min'
-'max'
-'mean'
-'sum'
-'fields'
 
-def field_checker(field_list, d):
-    if 'fields' not in d['aggregate'].keys():
-        return True
-    fields_in_dict = [value for value in d['aggregate']['fields']]
-    for f in fields_in_dict:
-        if f not in field_list:
-            return False
-    if 'rank_field' in d.keys():
-        if d['rank_field'] not in field_list:
-            return False
+def field_checker(field_dict, d):
+    for category in categories:
+        if category in d['aggregate'].keys():
+            for field in d['aggregate'][category]:
+                if field not in field_dict['counties'] and field not in field_dict['tests']:
+                    return False
     return True
+
+
+def file_picker(field_dict, d):
+    needed_files = []
+    counties = 'CoronaVirusETLFramework/data/us-counties.csv'
+    tests = 'CoronaVirusETLFramework/data/tests-by-state.csv'
+    for category in categories:
+        if category in d['aggregate'].keys():
+            for field in d['aggregate'][category]:
+                if field in field_dict['counties'] and counties not in needed_files:
+                    needed_files.append(counties)
+                if field in field_dict['tests'] and tests not in needed_files:
+                    needed_files.append(tests)
+    return needed_files
 
 
 def top_n_checker(d):
@@ -47,6 +56,7 @@ def top_n_checker(d):
     except ValueError:
         return False
 
+
 def area_checker(d):
     agg = d['aggregate']
     accepted = ['state', 'region', 'county']
@@ -54,7 +64,8 @@ def area_checker(d):
         return True
     if 'area' in agg.keys():
         if agg['area'] in accepted:
-            return True\
+            return True
+
 
 def date_checker(date_data):
     dates = [date_data['start_date'], date_data['end_date']]
@@ -69,25 +80,6 @@ def date_checker(date_data):
 
 def timing_checker(date_data):
     return date_data['start_date'] <= date_data['end_date']
-
-
-date
-county
-state
-fips
-cases
-deaths
-
-
-state
-date
-positive
-negative
-totalResults
-pending
-totalTests
-hospitalizedCurrently
-hospitalizedCumulative
 
 
 def window_checker(d):
@@ -110,18 +102,12 @@ def window_checker(d):
             return False
 
 
-# def most_least_checker(d):
-#     if 'most_least' not in d.keys():
-#         return True
-#     if d['most_least'] == 'most' or d['most_least'] == 'least':
-#         return True
-#     return False
-
-
-
 def input_output_checker(d):
-    if d['input_file'] == 'data.csv' and d['output_method'] == 'console':
+    if d['output_method'] == 'console':
         return True
+    else:
+        return False
+
 
 def window_creator(d):
     data = d['aggregate']
@@ -131,24 +117,23 @@ def window_creator(d):
         window = (data['window']['start_date'], data['window']['end_date'])
     return window
 
+
 def yaml_handler(filepath):
     data = read_config(filepath)
-    if (
-            window_checker(data) and
-            field_checker(fields, data) and
-            top_n_checker(data) and
-            # most_least_checker(data) and
-            input_output_checker(data) and
-            area_checker(data)
-            # Need to have something to check compare? Not sure on this since we're comparing states vs. counties, etc.
-    ):
-        window = window_creator(data)
-        return window
+    if \
+            (
+                    window_checker(data) and
+                    field_checker(fields, data) and
+                    top_n_checker(data) and
+                    input_output_checker(data) and
+                    area_checker(data)
+            ):
+        return True
     else:
-        return 'False'
+        return False
 
 
-print(yaml_handler('/Users/Tim/Desktop/Final-4300-Project/CoronaVirusETLFramework/config_files/topN.yaml'))
+print(yaml_handler('/Users/Tim/Desktop/Final-4300-Project/CoronaVirusETLFramework/config_files/compare.yaml'))
 
 # def handle_yaml_parameters(parameters):
 #     pass
