@@ -13,10 +13,21 @@ def read_config(filepath):
 
 
 # This will contain all possible field names from our datasets, once they're finished
-fields = ['cases', 'deaths', 'recoveries', 'mortality_rate', 'recovery_rate']
+counties_fields = ['new_cases', 'new_deaths', 'cases', 'deaths', 'recoveries',
+                   'mortality_rate', 'recovery_rate', 'new_recoveries',
+                   'mortality_rate_delta', 'recovery_rate_delta']
 
+tests_fields = ['state', 'date', 'positive', 'negative', 'totalResults', 'pending',
+                'totalTests', 'hospitalizedCurrently', 'hospitalizedCumulative']
+'min'
+'max'
+'mean'
+'sum'
+'fields'
 
 def field_checker(field_list, d):
+    if 'fields' not in d['aggregate'].keys():
+        return True
     fields_in_dict = [value for value in d['aggregate']['fields']]
     for f in fields_in_dict:
         if f not in field_list:
@@ -36,6 +47,14 @@ def top_n_checker(d):
     except ValueError:
         return False
 
+def area_checker(d):
+    agg = d['aggregate']
+    accepted = ['state', 'region', 'county']
+    if 'area' not in agg.keys():
+        return True
+    if 'area' in agg.keys():
+        if agg['area'] in accepted:
+            return True\
 
 def date_checker(date_data):
     dates = [date_data['start_date'], date_data['end_date']]
@@ -52,13 +71,33 @@ def timing_checker(date_data):
     return date_data['start_date'] <= date_data['end_date']
 
 
+date
+county
+state
+fips
+cases
+deaths
+
+
+state
+date
+positive
+negative
+totalResults
+pending
+totalTests
+hospitalizedCurrently
+hospitalizedCumulative
+
+
 def window_checker(d):
-    if 'window' not in d.keys():
+    agg = d['aggregate']
+    if 'window' not in agg.keys():
         return True
-    if 'window' in d.keys():
-        if 'start_date' in d['window'].keys() and 'end_date' in d['window'].keys():
-            if date_checker(d['window']):
-                if timing_checker(d['window']):
+    if 'window' in agg.keys():
+        if 'start_date' in agg['window'].keys() and 'end_date' in agg['window'].keys():
+            if date_checker(agg['window']):
+                if timing_checker(agg['window']):
                     return True
                 else:
                     print('Your end_date comes before your start_date. Correct the issue in order to proceed.')
@@ -71,18 +110,26 @@ def window_checker(d):
             return False
 
 
-def most_least_checker(d):
-    if 'most_least' not in d.keys():
-        return True
-    if d['most_least'] == 'most' or d['most_least'] == 'least':
-        return True
-    return False
+# def most_least_checker(d):
+#     if 'most_least' not in d.keys():
+#         return True
+#     if d['most_least'] == 'most' or d['most_least'] == 'least':
+#         return True
+#     return False
+
 
 
 def input_output_checker(d):
     if d['input_file'] == 'data.csv' and d['output_method'] == 'console':
         return True
 
+def window_creator(d):
+    data = d['aggregate']
+    if 'window' not in data:
+        window = None
+    else:
+        window = (data['window']['start_date'], data['window']['end_date'])
+    return window
 
 def yaml_handler(filepath):
     data = read_config(filepath)
@@ -90,14 +137,18 @@ def yaml_handler(filepath):
             window_checker(data) and
             field_checker(fields, data) and
             top_n_checker(data) and
-            most_least_checker(data) and
-            input_output_checker(data)
+            # most_least_checker(data) and
+            input_output_checker(data) and
+            area_checker(data)
             # Need to have something to check compare? Not sure on this since we're comparing states vs. counties, etc.
     ):
-        return True
+        window = window_creator(data)
+        return window
+    else:
+        return 'False'
 
 
-print(yaml_handler('/Users/Tim/Desktop/Final 4300 Project/CoronaVirusETLFramework/config_files/topN.yaml'))
+print(yaml_handler('/Users/Tim/Desktop/Final-4300-Project/CoronaVirusETLFramework/config_files/topN.yaml'))
 
 # def handle_yaml_parameters(parameters):
 #     pass

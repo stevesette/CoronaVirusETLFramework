@@ -4,10 +4,10 @@ aggregate:
     start_date: 03/01/2020
     end_date: 03/15/2020
   area: state
-    compare:
-      - Washington
-      - Massachusetts
-      - New York
+  compare:
+    - Washington
+    - Massachusetts
+    - New York
   fields:
     - cases
     - deaths

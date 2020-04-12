@@ -4,4 +4,4 @@ aggregate:
   max:
     - new_cases
     - new_deaths
-top_n: 15
+  top_n: 15
