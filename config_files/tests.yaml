@@ -1,0 +1,23 @@
+output_method: console
+aggregate:
+  area: state
+  window:
+    start_date: 03/01/2020
+    end_date: 03/15/2020
+  min:
+    - total_tests
+    - positive_tests
+    - infection_rate
+  max:
+    - total_tests
+    - positive_tests
+    - infection_rate
+  mean:
+    - total_tests
+    - positive_tests
+    - infection_rate
+  sum:
+    - total_tests
+    - positive_tests
+    - infection_rate
+top_n: 10
