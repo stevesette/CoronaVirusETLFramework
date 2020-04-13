@@ -8,7 +8,7 @@ from pyspark.sql import SQLContext
 
 
 class SparkEngine:
-    def __init__(self, filenames):
+    def __init__(self, filenames, groupings):
         self.spark = SparkSession \
             .builder \
             .appName("example-spark") \
@@ -17,35 +17,19 @@ class SparkEngine:
         self.sc = SparkContext.getOrCreate()
         self.sqlContext = SQLContext(self.sc)
         self.df = self.read_csvs(filenames)
+        self.groupings = groupings
 
     def read_csvs(self, filepaths):
         def read_one_csv(fpath_, sql_context):
             return sql_context.read.csv(fpath_, header=True, inferSchema=True)
 
-        def check_for_file(fpath_, base_path_, ):
-            if fpath_ is None or fpath_ not in os.listdir(base_path_):
-                raise RuntimeError("Invalid filepath passed to spark Engine")
-            else:
-                return True
-
-        base_path = filepaths[:filepaths.find("/*.")]
         rtn = None
         for filepath in filepaths:
             if rtn == None:
-                rtn = self.sqlContext.read.format('com.databricks.spark.csv').options(header=True).load(filepath)
+                rtn = read_one_csv(filepath, self.sqlContext)
             else:
-                temp = self.sqlContext.read.format('com.databricks.spark.csv').options(header=True).load(filepath)
-                rtn = rtn.join(temp, on=[], how="inner")
-        return
-
-    def join_data(self, name1, name2, new_name, list_of_col_pairs):
-        data1 = self.data[name1]
-        data2 = self.data[name2]
-        self.data[new_name] = data1.join(data2, list_of_col_pairs)
-        return
-
-    def group_by(self, df_name, field, new_name):
-        self.data[new_name] = self.data[df_name].groupBy(field).collect()
+                temp = read_one_csv(filepath, self.sqlContext)
+                rtn = rtn.join(temp, on=[self.groupings], how="inner")
         return
 
     def calculated_columns(self, total_lof, w):
