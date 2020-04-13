@@ -1,0 +1,13 @@
+output_method: terminal
+aggregate:
+  area: region
+  avg:
+    - total_recorded_cases
+    - total_positive_tests
+  max:
+    - total_recorded_cases
+    - total_positive_tests
+  min:
+    - total_recorded_cases
+    - total_positive_tests
+    
