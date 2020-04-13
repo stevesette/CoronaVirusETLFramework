@@ -1,6 +1,6 @@
 output_method: terminal
 aggregate:
-  area: region
+  area: state
   avg:
     - total_recorded_cases
     - total_positive_tests
