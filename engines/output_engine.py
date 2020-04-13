@@ -14,7 +14,7 @@ class OutputEngine:
             raise RuntimeError("invalid output option")
 
     def output_df(self):
-        return self.df
+        print(self.df.show()) # add false to print all
 
     def output_csv(self):
         self.df.write.format('csv').save(self.output_type)
@@ -22,4 +22,3 @@ class OutputEngine:
 
     def output_textfile(self):
         self.df.write.format('csv').options("delimiter", "|").save(self.output_type)
-        

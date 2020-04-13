@@ -1,4 +1,4 @@
-output_method: console
+output_method: terminal
 aggregate:
   area: region
   max:

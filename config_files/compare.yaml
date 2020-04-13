@@ -1,4 +1,4 @@
-output_method: console
+output_method: terminal
 aggregate:
   window:
     start_date: 03/01/2020
@@ -8,9 +8,7 @@ aggregate:
     - Washington
     - Massachusetts
     - New York
-  fields:
-    - cases
-    - deaths
-    - recoveries
+  sum:
+    - new_cases
+    - new_deaths
     - mortality_rate
-    - recovery_rate

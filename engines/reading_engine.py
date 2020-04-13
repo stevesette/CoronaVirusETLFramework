@@ -1,6 +1,7 @@
 import yaml
 import datetime
 
+
 class ReadingEngine:
     def __init__(self, yaml_file):
         self.file_name = yaml_file
@@ -10,8 +11,8 @@ class ReadingEngine:
                  'mortality_rate', 'mortality_rate_delta', 'new_cases_delta',
                  'new_deaths_delta', 'recoveries', 'recovery_rate'],
             'tests':
-                ['positive', 'positive_tests', 'negative', 'totalResults',
-                 'total_tests', 'negative_tests', 'test_positive_rate', 'test_negative_rate']
+                ['positive', 'negative', 'total_results',
+                 'total_tests', 'test_positive_rate', 'test_negative_rate']
         }
         self.categories = ['min', 'max', 'mean', 'sum', 'fields']
         self.data = self.yaml_handler()
@@ -28,31 +29,32 @@ class ReadingEngine:
             if category in d['aggregate'].keys():
                 for field in d['aggregate'][category]:
                     if field not in self.fields['counties'] and field not in self.fields['tests']:
+                        print("field not found in dataset")
                         return False
         return True
 
-    def group_by(self):
+    def get_group_by(self):
         groups = []
         d = self.data['aggregate']
         if 'area' in d.keys():
-            groups.append(self.level)
+            groups.append(self.area)
         if 'window' in d.keys():
-            groups.append(self.window_getter())
+            groups.append("date")
         return groups
 
-    def function_finder(self):
-        d = self.data['aggregate'].copy()
-        for key in d.keys():
-            if key not in self.categories:
-                d.pop(key)
+    def get_functions(self):
+        d = {}
+        for key in self.data['aggregate'].keys():
+            if key in self.categories:
+                d[key] = self.data['aggregate'][key]
         return d
 
     def file_picker(self):
         d = self.data
         needed_files = []
         self.needed_columns = set()
-        counties = 'CoronaVirusETLFramework/data/us-counties.csv'
-        tests = 'CoronaVirusETLFramework/data/tests-by-state.csv'
+        counties = 'data/us-counties.csv'
+        tests = 'data/tests-by-state.csv'
         for category in self.categories:
             if category in d['aggregate'].keys():
                 for field in d['aggregate'][category]:
@@ -70,16 +72,17 @@ class ReadingEngine:
         agg = d['aggregate']
         accepted = ['state', 'region', 'county']
         if 'area' not in agg.keys():
+            self.area = 'county'
             return True
         if 'area' in agg.keys():
             if agg['area'] in accepted:
-                self.level = agg['area']
+                self.area = agg['area']
                 return True
             else:
                 print(agg['area'] + ' is not accepted as an area.')
 
-    def get_level(self):
-        return self.level
+    def get_area(self):
+        return self.area
 
     def date_checker(self, date_data):
         dates = [date_data['start_date'], date_data['end_date']]
@@ -115,10 +118,17 @@ class ReadingEngine:
                 return False
 
     def output_checker(self, d):
-        if d['output_method'] == 'console':
+        if d['output_method'] == 'terminal' or '.csv' in d['output_method'] or '.txt' in d['output_method']:
             return True
         else:
+            print("Invalid output method")
             return False
+
+    def get_compare(self):
+        if 'compare' in self.data['aggregate'].keys():
+            return self.data['aggregate']['compare']
+        else:
+            None
 
     def window_creator(self, d):
         data = d['aggregate']
@@ -137,7 +147,7 @@ class ReadingEngine:
         if \
                 (
                         self.window_checker(data) and
-                        self.field_checker(self.fields, data) and
+                        self.field_checker(data) and
                         self.output_checker(data) and
                         self.area_checker(data)
                 ):
@@ -148,8 +158,8 @@ class ReadingEngine:
 # def handle_yaml_parameters(parameters):
 #     pass
 
-# def output(output_object):
-#     pass
+    def get_output(self):
+        return self.data['output_method']
 
 # def main_driver(filepath):
 #     file = read_config(filepath)

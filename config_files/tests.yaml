@@ -1,4 +1,4 @@
-output_method: console
+output_method: terminal
 aggregate:
   area: state
   window:
@@ -6,26 +6,25 @@ aggregate:
     end_date: 03/15/2020
   min:
     - total_tests
-    - positive_tests
-    - negative_tests
+    - positive
+    - negative
     - test_positive_rate
     - test_negative_rate
   max:
     - total_tests
-    - positive_tests
-    - negative_test
+    - positive
+    - negative
     - test_positive_rate
     - test_negative_rate
   mean:
     - total_tests
-    - positive_tests
-    - negative_test
+    - positive
+    - negative
     - test_positive_rate
     - test_negative_rate
   sum:
     - total_tests
-    - positive_tests
-    - negative_test
+    - positive
+    - negative
     - test_positive_rate
     - test_negative_rate
-top_n: 10

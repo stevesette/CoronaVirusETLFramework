@@ -1,4 +1,4 @@
-output_method: console
+output_method: terminal
 aggregate:
   area: region
   window:
@@ -7,25 +7,17 @@ aggregate:
   min:
     - new_cases
     - new_deaths
-    - new_recoveries
     - mortality_rate_delta
-    - recovery_rate_delta
   max:
     - new_cases
     - new_deaths
-    - new_recoveries
     - mortality_rate_delta
-    - recovery_rate_delta
-  mean:
+  avg:
     - new_cases
     - new_deaths
-    - new_recoveries
     - mortality_rate_delta
-    - recovery_rate_delta
   sum:
     - new_cases
     - new_deaths
-    - new_recoveries
     - mortality_rate_delta
-    - recovery_rate_delta
-top_n: 10
+

@@ -6,12 +6,13 @@ import sys
 
 def main():
     yaml_input = sys.argv[1]
-    re = ReadingEngine(yaml_input)
-    se = SparkEngine()
-    se.read(re.filenames())  # reads in csvs and joins
-    se.group_by_area(level=re.level())
-    se.calculate_columns(re.filenames())
-    se.handle_window(re.window())
-    se.handle_fields(group_by_fields=re.group_by(), functions=re.functions())
-    oe = OutputEngine(re.output(), se.compute_output())
+    re = ReadingEngine(yaml_file=yaml_input)
+    se = SparkEngine(filenames=re.file_picker(), area=re.get_area(), total_list_of_fields=re.get_columns(),
+                     date_window=re.window_getter(), group_by=re.get_group_by(), functions=re.get_functions(),
+                     compare=re.get_compare())
+    oe = OutputEngine(df=se.compute_output(), output_type=re.get_output())
     oe.output()
+
+
+if __name__ == '__main__':
+    main()

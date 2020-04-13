@@ -1,4 +1,4 @@
-state,date,positive,negative,totalResults,pending,totalTests,hospitalizedCurrently,hospitalizedCumulative
+state,date,positive,negative,total_results,pending,total_tests,hospitalizedCurrently,hospitalizedCumulative
 Alaska,2020-04-10,246,7186,7432,,7432,,28
 Alabama,2020-04-10,2968,18058,21026,,21026,,368
 Arkansas,2020-04-10,1171,15949,17120,,17120,86,130
