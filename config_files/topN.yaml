@@ -1,8 +1,9 @@
-input_file: data.csv
 output_method: console
 aggregate:
   area: region
   max:
     - new_cases
     - new_deaths
-top_n: 15
+    - total_tests
+    - positive_tests
+  top_n: 15

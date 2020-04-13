@@ -22,4 +22,4 @@ class OutputEngine:
 
     def output_textfile(self):
         self.df.write.format('csv').options("delimiter", "|").save(self.output_type)
-        # 'com.databricks.spark.csv' if no run, try instead of 'csv'
+        
