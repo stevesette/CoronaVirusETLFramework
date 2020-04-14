@@ -200,6 +200,12 @@ class ReadingEngine:
         """
         return date_data['start_date'] <= date_data['end_date']
 
+    def get_compare(self):
+        if 'compare' in self.data['aggregate'].keys():
+            return self.data['aggregate']['compare']
+        else:
+            None
+
     def window_creator(self, d):
         """
         This method creates the date window object
@@ -268,4 +274,3 @@ class ReadingEngine:
             return data
         else:
             raise RuntimeError('Error reading config file')
-
