@@ -1,3 +1,3 @@
 # CoronaVirusETLFramework
-Final Project for DS_4300 in collaboration with Tim Lexa, Caelan Schneider, and Jack Tonina
+Final Project for DS_4300 in collaboration with Tim Lexa, Caelan Schneider, and Jack Tonina <br />
 Demo Video: https://www.youtube.com/watch?v=1SfJoIcZ0M0
