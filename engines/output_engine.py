@@ -1,3 +1,8 @@
+from pyspark.sql.functions import to_date
+from pyspark.sql import functions as F
+import os
+
+
 class OutputEngine:
     def __init__(self, df, output_type):
         self.df = df
@@ -17,8 +22,13 @@ class OutputEngine:
         print(self.df.show()) # add false to print all
 
     def output_csv(self):
-        self.df.write.format('csv').save(self.output_type)
-        # 'com.databricks.spark.csv' if no run, try instead of 'csv'
+        self.df = self.df.withColumn("Date", F.to_date(F.col("date")))
+        if not os.path.exists('./output'):
+            os.mkdir('./output')
+        self.df.toPandas().to_csv('output/'+self.output_type, index=False)
 
-    def output_textfile(self):
-        self.df.write.format('csv').options("delimiter", "|").save(self.output_type)
+    def output_txt(self):
+        self.df = self.df.withColumn("Date", F.to_date(F.col("date")))
+        if not os.path.exists('./output'):
+            os.mkdir('./output')
+        self.df.toPandas().to_csv('output/' + self.output_type, index=False, sep=';')
