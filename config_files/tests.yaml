@@ -1,4 +1,4 @@
-output_method: terminal
+output_method: testy.txt
 aggregate:
   area: state
   window:
