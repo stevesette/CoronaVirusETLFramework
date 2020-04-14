@@ -13,15 +13,29 @@ class ReadingEngine:
         """
         self.file_name = yaml_file
         self.fields = {
-            'counties':
-                ['county', 'new_cases', 'new_deaths', 'cases', 'deaths',
-                 'mortality_rate', 'mortality_rate_delta', 'new_cases_delta',
-                 'new_deaths_delta', 'recoveries', 'recovery_rate'],
-            'tests':
-                ['positive', 'negative', 'total_results',
-                 'total_tests', 'test_positive_rate', 'test_negative_rate']
+            "counties": [
+                "county",
+                "new_cases",
+                "new_deaths",
+                "cases",
+                "deaths",
+                "mortality_rate",
+                "mortality_rate_delta",
+                "new_cases_delta",
+                "new_deaths_delta",
+                "recoveries",
+                "recovery_rate",
+            ],
+            "tests": [
+                "positive",
+                "negative",
+                "total_results",
+                "total_tests",
+                "test_positive_rate",
+                "test_negative_rate",
+            ],
         }
-        self.categories = ['min', 'max', 'mean', 'sum', 'fields']
+        self.categories = ["min", "max", "mean", "sum", "fields"]
         self.data = self.yaml_handler()
 
     def read_config(self, filepath):
@@ -45,9 +59,12 @@ class ReadingEngine:
         :return: Boolean (true = data is valid). Returns True if all fields are valid
         """
         for category in self.categories:
-            if category in d['aggregate'].keys():
-                for field in d['aggregate'][category]:
-                    if field not in self.fields['counties'] and field not in self.fields['tests']:
+            if category in d["aggregate"].keys():
+                for field in d["aggregate"][category]:
+                    if (
+                        field not in self.fields["counties"]
+                        and field not in self.fields["tests"]
+                    ):
                         print("Field not found in dataset")
                         return False
         return True
@@ -59,10 +76,10 @@ class ReadingEngine:
         :return: returns a list of the groupings
         """
         groups = []
-        d = self.data['aggregate']
-        if 'area' in d.keys():
+        d = self.data["aggregate"]
+        if "area" in d.keys():
             groups.append(self.area)
-        if 'window' in d.keys():
+        if "window" in d.keys():
             groups.append("date")
         return groups
 
@@ -72,9 +89,9 @@ class ReadingEngine:
         :return: returns the dictionary
         """
         d = {}
-        for key in self.data['aggregate'].keys():
+        for key in self.data["aggregate"].keys():
             if key in self.categories:
-                d[key] = self.data['aggregate'][key]
+                d[key] = self.data["aggregate"][key]
         return d
 
     def file_picker(self):
@@ -87,15 +104,18 @@ class ReadingEngine:
         d = self.data
         needed_files = []
         self.needed_columns = set()
-        counties = 'data/us-counties.csv'
-        tests = 'data/tests-by-state.csv'
+        counties = "data/us-counties.csv"
+        tests = "data/tests-by-state.csv"
         for category in self.categories:
-            if category in d['aggregate'].keys():
-                for field in d['aggregate'][category]:
+            if category in d["aggregate"].keys():
+                for field in d["aggregate"][category]:
                     self.needed_columns.add(field)
-                    if field in self.fields['counties'] and counties not in needed_files:
+                    if (
+                        field in self.fields["counties"]
+                        and counties not in needed_files
+                    ):
                         needed_files.append(counties)
-                    if field in self.fields['tests'] and tests not in needed_files:
+                    if field in self.fields["tests"] and tests not in needed_files:
                         needed_files.append(tests)
         return needed_files
 
@@ -112,17 +132,17 @@ class ReadingEngine:
         :param d: takes the dictionary created by read_config
         :return: Boolean (true = data is valid). Returns True if the area if valid
         """
-        agg = d['aggregate']
-        accepted = ['state', 'region', 'county']
-        if 'area' not in agg.keys():
-            self.area = 'county'
+        agg = d["aggregate"]
+        accepted = ["state", "region", "county"]
+        if "area" not in agg.keys():
+            self.area = "county"
             return True
-        if 'area' in agg.keys():
-            if agg['area'] in accepted:
-                self.area = agg['area']
+        if "area" in agg.keys():
+            if agg["area"] in accepted:
+                self.area = agg["area"]
                 return True
             else:
-                print(agg['area'] + ' is not accepted as an area.')
+                print(agg["area"] + " is not accepted as an area.")
                 return False
 
     def get_area(self):
@@ -139,8 +159,11 @@ class ReadingEngine:
         :param d: takes the dictionary created by read_config
         :return: Boolean (true = data is valid). Returns True if there is no confict between files needed and area
         """
-        if d['aggregate']['area'] == 'county' and 'data/tests-by-state.csv' in self.file_picker():
-            print('Testing data is not available at the county level.')
+        if (
+            d["aggregate"]["area"] == "county"
+            and "data/tests-by-state.csv" in self.file_picker()
+        ):
+            print("Testing data is not available at the county level.")
             return False
         return True
 
@@ -154,22 +177,29 @@ class ReadingEngine:
         :param d: takes the dictionary created by read_config
         :return: Boolean (true = data is valid). Returns as true if there is no data window indicated, or if window is valid
         """
-        agg = d['aggregate']
-        if 'window' not in agg.keys():
+        agg = d["aggregate"]
+        if "window" not in agg.keys():
             return True
-        if 'window' in agg.keys():
-            if 'start_date' in agg['window'].keys() and 'end_date' in agg['window'].keys():
-                if self.date_checker(agg['window']):
-                    if self.timing_checker(agg['window']):
+        if "window" in agg.keys():
+            if (
+                "start_date" in agg["window"].keys()
+                and "end_date" in agg["window"].keys()
+            ):
+                if self.date_checker(agg["window"]):
+                    if self.timing_checker(agg["window"]):
                         return True
                     else:
-                        print('Your end_date comes before your start_date. Correct the issue in order to proceed.')
+                        print(
+                            "Your end_date comes before your start_date. Correct the issue in order to proceed."
+                        )
                         return False
                 else:
-                    print('One or both of your dates is invalid. Reformat to follow: mm/dd/yyyy')
+                    print(
+                        "One or both of your dates is invalid. Reformat to follow: mm/dd/yyyy"
+                    )
                     return False
             else:
-                print('Window is missing \'start_date\' and/or \'end_date\'')
+                print("Window is missing 'start_date' and/or 'end_date'")
                 return False
 
     def date_checker(self, date_data):
@@ -182,13 +212,13 @@ class ReadingEngine:
         :param date_data: Takes in a section of the yaml file dictionary from window_checker
         :return: Boolean (true = data is valid). Returns True if both dates are valid
         """
-        dates = [date_data['start_date'], date_data['end_date']]
+        dates = [date_data["start_date"], date_data["end_date"]]
         for date in dates:
-            month, day, year = date.split('/')
+            month, day, year = date.split("/")
             try:
                 datetime.datetime(int(year), int(month), int(day))
             except ValueError:
-                print('The dates you entered are invalid')
+                print("The dates you entered are invalid")
                 return False
         return True
 
@@ -198,11 +228,11 @@ class ReadingEngine:
         :param date_data: Takes in a section of the yaml file dictionary from window_checker
         :return: Boolean (true = data is valid). Returns True if start_date is before or equal to end_date
         """
-        return date_data['start_date'] <= date_data['end_date']
+        return date_data["start_date"] <= date_data["end_date"]
 
     def get_compare(self):
-        if 'compare' in self.data['aggregate'].keys():
-            return self.data['aggregate']['compare']
+        if "compare" in self.data["aggregate"].keys():
+            return self.data["aggregate"]["compare"]
         else:
             None
 
@@ -212,11 +242,11 @@ class ReadingEngine:
         :param d: takes the dictionary created by read_config
         :return: Returns the window stored as a tuple
         """
-        data = d['aggregate']
-        if 'window' not in data:
+        data = d["aggregate"]
+        if "window" not in data:
             window = None
         else:
-            window = (data['window']['start_date'], data['window']['end_date'])
+            window = (data["window"]["start_date"], data["window"]["end_date"])
         return window
 
     def window_getter(self):
@@ -232,7 +262,11 @@ class ReadingEngine:
         :param d: takes the dictionary created by read_config
         :return: Boolean (true = data is valid)
         """
-        if d['output_method'] == 'terminal' or '.csv' in d['output_method'] or '.txt' in d['output_method']:
+        if (
+            d["output_method"] == "terminal"
+            or ".csv" in d["output_method"]
+            or ".txt" in d["output_method"]
+        ):
             return True
         else:
             print("Invalid output method")
@@ -243,15 +277,15 @@ class ReadingEngine:
         This method just retrieves the method of output indicated by the yaml file
         :return: returns the output method
         """
-        return self.data['output_method']
+        return self.data["output_method"]
 
     def get_compare(self):
         """
         If the yaml file indicates a comparison, this method returns the locations that are being compared
         :return: Returns a list of the locations being compared. if there is not comparison, it returns None
         """
-        if 'compare' in self.data['aggregate'].keys():
-            return self.data['aggregate']['compare']
+        if "compare" in self.data["aggregate"].keys():
+            return self.data["aggregate"]["compare"]
         else:
             None
 
@@ -261,16 +295,15 @@ class ReadingEngine:
         Raises an error if any checker fails
         :return: returns the dictionary after its been validated. In the __init__, this is stored as self.data
         """
-        filepath = 'config_files/' + self.file_name
+        filepath = "config_files/" + self.file_name
         data = self.read_config(filepath)
-        if \
-                (
-                        self.window_checker(data) and
-                        self.field_checker(data) and
-                        self.output_checker(data) and
-                        self.area_checker(data) and
-                        self.county_test_checker(data)
-                ):
+        if (
+            self.window_checker(data)
+            and self.field_checker(data)
+            and self.output_checker(data)
+            and self.area_checker(data)
+            and self.county_test_checker(data)
+        ):
             return data
         else:
-            raise RuntimeError('Error reading config file')
+            raise RuntimeError("Error reading config file")

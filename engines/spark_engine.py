@@ -7,7 +7,16 @@ from pyspark.sql.window import Window
 
 
 class SparkEngine:
-    def __init__(self, filenames=None, area=None, total_list_of_fields=None, date_window=None, group_by=None, functions=None, compare=None):
+    def __init__(
+        self,
+        filenames=None,
+        area=None,
+        total_list_of_fields=None,
+        date_window=None,
+        group_by=None,
+        functions=None,
+        compare=None,
+    ):
         """
         An API for running a set of functions on datasets in Spark. Is meant to be run in conjunction with ReadingEngine
         to get configuration inputs from a properly formatted yaml configuration file and is meant to be run with
@@ -21,11 +30,11 @@ class SparkEngine:
         :param functions: Dict{String:List[String]} - AggregationFunction:[fields to run aggregation on]
         :param compare: List[String] - List of areas to filter by {i.e. area=region -> compare=['Northeast', 'Midwest']
         """
-        self.spark = SparkSession \
-            .builder \
-            .appName("example-spark") \
-            .config("spark.sql.crossJoin.enabled", "true") \
+        self.spark = (
+            SparkSession.builder.appName("example-spark")
+            .config("spark.sql.crossJoin.enabled", "true")
             .getOrCreate()
+        )
         self.sc = SparkContext.getOrCreate()
         self.sqlContext = SQLContext(self.sc)
         self.filenames = filenames
@@ -48,13 +57,14 @@ class SparkEngine:
 
         def read_one_csv(fpath_, sql_context):
             return sql_context.read.csv(fpath_, header=True, inferSchema=True)
+
         rtn = None
         for filepath in filenames:
             if rtn == None:
                 rtn = read_one_csv(filepath, self.sqlContext)
             else:
                 temp = read_one_csv(filepath, self.sqlContext)
-                rtn = rtn.alias('rtn').join(temp, on=['date', 'state'], how="inner")
+                rtn = rtn.alias("rtn").join(temp, on=["date", "state"], how="inner")
         return rtn
 
     def calculate_columns(self, tlof=None, window=None, df=None):
@@ -70,32 +80,40 @@ class SparkEngine:
         if tlof is None:
             tlof = self.tlof
         if window is None:
-            window = Window.partitionBy(self.area).orderBy('date')
+            window = Window.partitionBy(self.area).orderBy("date")
         if df is None:
             df = self.df
 
         def new_cases(df_):
-            df_ = df_.withColumn('previous_cases', F.lag(df_.cases).over(window))
+            df_ = df_.withColumn("previous_cases", F.lag(df_.cases).over(window))
             df_ = df_.withColumn("new_cases", df_.cases - df_.previous_cases)
             return df_
 
         def new_cases_delta(df_):
-            if 'new_cases' not in df_.columns:
+            if "new_cases" not in df_.columns:
                 df_ = new_cases(df_)
-            df_ = df_.withColumn('previous_new_cases', F.lag(df_.new_cases).over(window))
-            df_ = df_.withColumn('new_cases_delta', df_.new_cases - df_.previous_new_cases)
+            df_ = df_.withColumn(
+                "previous_new_cases", F.lag(df_.new_cases).over(window)
+            )
+            df_ = df_.withColumn(
+                "new_cases_delta", df_.new_cases - df_.previous_new_cases
+            )
             return df_
 
         def new_deaths(df_):
-            df_ = df_.withColumn('previous_deaths', F.lag(df_.deaths).over(window))
+            df_ = df_.withColumn("previous_deaths", F.lag(df_.deaths).over(window))
             df_ = df_.withColumn("new_deaths", df_.deaths - df_.previous_deaths)
             return df_
 
         def new_deaths_delta(df_):
-            if 'new_deaths' not in df_.columns:
+            if "new_deaths" not in df_.columns:
                 df_ = new_deaths(df_)
-            df_ = df_.withColumn('previous_new_deaths', F.lag(df_.new_deaths).over(window))
-            df_ = df_.withColumn('new_deaths_delta', df_.new_deaths - df_.previous_new_deaths)
+            df_ = df_.withColumn(
+                "previous_new_deaths", F.lag(df_.new_deaths).over(window)
+            )
+            df_ = df_.withColumn(
+                "new_deaths_delta", df_.new_deaths - df_.previous_new_deaths
+            )
             return df_
 
         def mortality_rate(df_):
@@ -103,24 +121,34 @@ class SparkEngine:
             return df_
 
         def mortality_rate_delta(df_):
-            if 'mortality_rate' not in df_.columns:
+            if "mortality_rate" not in df_.columns:
                 df_ = mortality_rate(df_)
-            df_ = df_.withColumn('previous_mortality_rate', F.lag(df_.mortality_rate).over(window))
-            df_ = df_.withColumn('mortality_rate_delta', df_.mortality_rate - df_.previous_mortality_rate)
+            df_ = df_.withColumn(
+                "previous_mortality_rate", F.lag(df_.mortality_rate).over(window)
+            )
+            df_ = df_.withColumn(
+                "mortality_rate_delta", df_.mortality_rate - df_.previous_mortality_rate
+            )
             return df_
 
         def test_positive_rate(df_):
-            df_ = df_.withColumn('test_positive_rate', df_.positive / df_.total_results)
+            df_ = df_.withColumn("test_positive_rate", df_.positive / df_.total_results)
             return df_
 
         def test_negative_rate(df_):
-            df_ = df_.withColumn('test_negative_rate', df_.negative / df_.total_results)
+            df_ = df_.withColumn("test_negative_rate", df_.negative / df_.total_results)
             return df_
 
-        needs_to_be_calculated = {"new_cases": new_cases, "new_cases_delta": new_cases_delta, "new_deaths": new_deaths,
-                                  "new_deaths_delta": new_deaths_delta, "mortality_rate": mortality_rate,
-                                  "mortality_rate_delta": mortality_rate_delta, "test_positive_rate": test_positive_rate,
-                                  "test_negative_rate": test_negative_rate}
+        needs_to_be_calculated = {
+            "new_cases": new_cases,
+            "new_cases_delta": new_cases_delta,
+            "new_deaths": new_deaths,
+            "new_deaths_delta": new_deaths_delta,
+            "mortality_rate": mortality_rate,
+            "mortality_rate_delta": mortality_rate_delta,
+            "test_positive_rate": test_positive_rate,
+            "test_negative_rate": test_negative_rate,
+        }
         for field in needs_to_be_calculated:
             if field in tlof:
                 df = needs_to_be_calculated[field](df)
@@ -148,26 +176,35 @@ class SparkEngine:
             area = self.area
 
         def rollup(df_, group_by_):
-            default_cols = ['positive', 'negative', 'total_results', 'pending', 'total_tests', 'cases', 'deaths']
+            default_cols = [
+                "positive",
+                "negative",
+                "total_results",
+                "pending",
+                "total_tests",
+                "cases",
+                "deaths",
+            ]
             agg_q = {}
             for col in default_cols:
                 if col in self.df.columns:
-                    agg_q[col] = 'sum'
+                    agg_q[col] = "sum"
             df_ = df_.groupby(group_by_).agg(agg_q).orderBy(group_by_)
             for col in agg_q.keys():
                 df_ = df_.withColumnRenamed(f"sum({col})", col)
             return df_
-        if area == 'region':
+
+        if area == "region":
             df = self.make_region_column(df=df)
             df = df.drop("state")
             df = df.drop("county")
             df = df.drop("fips")
             df = rollup(df, group_by)
-        elif area == 'state':
+        elif area == "state":
             df = df.drop("county")
             df = df.drop("fips")
             df = rollup(df, group_by)
-        elif area == 'county':
+        elif area == "county":
             pass
         else:
             raise RuntimeError("Invalid area parameter")
@@ -183,21 +220,24 @@ class SparkEngine:
             df = self.df
 
         def get_region(state):
-            lookup = {"Washington, Oregon, California, Alaska, Hawaii": "West",
-                      "Idaho, Montana, Nevada, Utah, Wyoming, Colorado": "Rocky Mountains",
-                      "Arizona, New Mexico, Texas, Oklahoma": "Southwest",
-                      "North Dakota, South Dakota, Nebraska, Kansas, Missouri, Iowa, Minnesota, Wisconsin, Illinois, "
-                      "Indiana, Michigan, Ohio": "Midwest",
-                      "Arkansas, Louisiana, Mississippi, Alabama, Georgia, Florida, Tennessee, North Carolina, "
-                      "South Carolina, Kentucky, West Virginia, Virginia, Delaware, Maryland": "Southeast",
-                      "Pennsylvania, New Jersey, Connecticut, Rhode Island, Massachusetts, New York, Vermont, "
-                      "New Hampshire, Maine": "Northeast"}
+            lookup = {
+                "Washington, Oregon, California, Alaska, Hawaii": "West",
+                "Idaho, Montana, Nevada, Utah, Wyoming, Colorado": "Rocky Mountains",
+                "Arizona, New Mexico, Texas, Oklahoma": "Southwest",
+                "North Dakota, South Dakota, Nebraska, Kansas, Missouri, Iowa, Minnesota, Wisconsin, Illinois, "
+                "Indiana, Michigan, Ohio": "Midwest",
+                "Arkansas, Louisiana, Mississippi, Alabama, Georgia, Florida, Tennessee, North Carolina, "
+                "South Carolina, Kentucky, West Virginia, Virginia, Delaware, Maryland": "Southeast",
+                "Pennsylvania, New Jersey, Connecticut, Rhode Island, Massachusetts, New York, Vermont, "
+                "New Hampshire, Maine": "Northeast",
+            }
             for key in lookup.keys():
                 if state in key:
                     return lookup[key]
             return "Other"
+
         region_udf = F.udf(get_region, StringType())
-        df = df.withColumn('region', region_udf(df.state))
+        df = df.withColumn("region", region_udf(df.state))
         return df
 
     def handle_window(self, date_window=None, df=None):
@@ -269,7 +309,9 @@ class SparkEngine:
         rtn = df.selectExpr(group_by).dropDuplicates()
         for func_field in functions:
             temp = agg(func_field, functions[func_field])
-            rtn = rtn.alias('rtn').join(temp.alias(func_field), on=group_by, how="inner")
+            rtn = rtn.alias("rtn").join(
+                temp.alias(func_field), on=group_by, how="inner"
+            )
         return rtn.orderBy(group_by)
 
     def compute_output(self):
