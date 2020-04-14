@@ -1,16 +1,18 @@
-import os
-
-from pyspark.sql import SparkSession
 from pyspark import SparkContext
-from pyspark.sql.window import Window
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import SQLContext
-from pyspark.sql.types import StringType, TimestampType, DateType
+from pyspark.sql.types import StringType
+from pyspark.sql.window import Window
 
 
 class SparkEngine:
-    def __init__(self, filenames, area, total_list_of_fields, date_window, group_by, functions, compare):
+    def __init__(self, filenames=None, area=None, total_list_of_fields=None, date_window=None, group_by=None, functions=None, compare=None):
         """
+        An API for running a set of functions on datasets in Spark. Is meant to be run in conjunction with ReadingEngine
+        to get configuration inputs from a properly formatted yaml configuration file and is meant to be run with
+        OutputEngine for displaying or storing the data. However, if you so choose, you can instantiate this object
+        without parameters and use as a customizable API.
         :param filenames: List[String] - names of files we need to build data frame
         :param area: String - Location group by criteria, one of county, state, or region
         :param total_list_of_fields: List[String] - List of fields that we need to pull together
@@ -25,25 +27,29 @@ class SparkEngine:
             .config("spark.sql.crossJoin.enabled", "true") \
             .getOrCreate()
         self.sc = SparkContext.getOrCreate()
+        self.sqlContext = SQLContext(self.sc)
+        self.filenames = filenames
         self.area = area
         self.tlof = total_list_of_fields
         self.date_window = date_window
         self.group_by = group_by
         self.functions = functions
         self.compare = compare
-        self.sqlContext = SQLContext(self.sc)
         self.df = self.read_csvs(filenames)
 
-    def read_csvs(self, filepaths):
+    def read_csvs(self, filenames=None):
         """
         Creates a dataframe from the csvs specified in filepaths. If multiple filepaths, joins on date and state.
-        :param filepaths: List[String]
+        :param filepaths: List[String] of filenames that contain the necessary data for the dataframe, defaults to self.filenames if None
         :return: SparkDataFrame of the csv data joined together (if necessary)
         """
+        if filenames is None:
+            filenames = self.filenames
+
         def read_one_csv(fpath_, sql_context):
             return sql_context.read.csv(fpath_, header=True, inferSchema=True)
         rtn = None
-        for filepath in filepaths:
+        for filepath in filenames:
             if rtn == None:
                 rtn = read_one_csv(filepath, self.sqlContext)
             else:
@@ -56,6 +62,9 @@ class SparkEngine:
         Checks the return fields for which ones need to be calculated by spark functions. I.e. new_cases is not a part
         of the dataset so we need to calculate that by comparing the aggregate number of cases with the previous
         number of cases in that area. When parameters are None, uses internal saved parameters from the class.
+        :param tlof: reflects tlof in constructor above, defaults to self.tlot if None
+        :param window: Window that can be partitioned by, defaults to partition by self.area and order by 'date' when None
+        :param df: reflects df created in constructor above, defaults to self.df if None
         :return: SparkDataFrame with any fields that need to be calculated
         """
         if tlof is None:
@@ -126,7 +135,10 @@ class SparkEngine:
         It also deletes columns that could confuse the ouput, i.e. if running on a region then there should not be any
         state, county, or fips information as it could mislead the user into thinking that the data is specifically for
         one county or one state or one fips.
-        :return: Changed existing object internal dataframe self.df
+        :param group_by: Reflects group_by in constructor, defaults to self.group_by if None
+        :param df: Reflects df created in constructor, defaults to self.group_by if None
+        :param area: Reflects area in constructor, defaults to self.area if None
+        :return: adjusted df with area rollups and confusing columns removed
         """
         if group_by is None:
             group_by = self.group_by
@@ -162,6 +174,11 @@ class SparkEngine:
         return df
 
     def make_region_column(self, df=None):
+        """
+        Adds a column called region to a dataframe.
+        :param df: Reflects df created in constructor above, defaults to self.df if None
+        :return: dataframe with region column attached
+        """
         if df is None:
             df = self.df
 
@@ -184,6 +201,12 @@ class SparkEngine:
         return df
 
     def handle_window(self, date_window=None, df=None):
+        """
+        Filters rows based on a date window. Dates are a tuple of start then end date and are in the format MM-DD-YYYY.
+        :param date_window: reflects date_window in constructor, defaults to self.date_window if None
+        :param df: reflects df created in constructor, defaults to self.df if None
+        :return: filtered dataframe
+        """
         if date_window is None:
             date_window = self.date_window
         if df is None:
@@ -198,6 +221,16 @@ class SparkEngine:
         return df
 
     def handle_compare(self, compare=None, df=None, area=None):
+        """
+        Filters rows based on areas that we want to include. If region then valid input is any of the 6 regions defined
+        in self.make_region_column. If state then valid input is any of the 50 states or territories. If county then
+        valid input is any of the counties that exist in the US. All compare fields must be in proper casing with spaces
+        separating any that have them (i.e. "New York" or "South Dakota")
+        :param compare: reflects compare in the constructor, defaults to self.compare if None
+        :param df: reflects df in the constructor, defaults to self.df if None
+        :param area: reflects area in the constructor, defaults to self.area if None
+        :return: filtered dataframe
+        """
         if compare is None:
             compare = self.compare
         if df is None:
@@ -209,6 +242,15 @@ class SparkEngine:
         return df
 
     def handle_fields(self, group_by=None, df=None, functions=None):
+        """
+        Handles aggregation of all fields in the functions parameter on the dataframe parameter by grouping by the
+        group_by parameter. When any of these fields are left as none they default to what the spark engine was
+        initialized with. Should be run after fields are calculated and area is rolled up.
+        :param group_by: reflects group_by in constructor, defaults to self.group_by if None
+        :param df: reflects df in constructor, defaults to self.df if None
+        :param functions: reflects functions in constructor, defaults to self.functions if None
+        :return: dataframe with all aggregation functions run and columns for the results added
+        """
         if group_by is None:
             group_by = self.group_by
         if df is None:
@@ -231,6 +273,12 @@ class SparkEngine:
         return rtn.orderBy(group_by)
 
     def compute_output(self):
+        """
+        Runs handle_area, calculate_columns, handle_window, handle_compare, and handle_fields all with default values.
+        This is the method which we recommend running the spark engine as everything is properly ordered here and
+        guarantees no errors provided the input to create the spark engine has been done properly.
+        :return: dataframe with all calculations and data manipulations handled
+        """
         self.df = self.handle_area()
         self.df = self.calculate_columns()
         self.df = self.handle_window()

@@ -1,13 +1,16 @@
-output_method: terminal
+output_method: error.txt
 aggregate:
   area: state
+  window:
+    start_date: 03/15/2020
+    end_date: 04/15/2020
   avg:
-    - total_recorded_cases
-    - total_positive_tests
+    - cases
+    - positive
   max:
-    - total_recorded_cases
-    - total_positive_tests
+    - cases
+    - positive
   min:
-    - total_recorded_cases
-    - total_positive_tests
+    - cases
+    - positive
     
