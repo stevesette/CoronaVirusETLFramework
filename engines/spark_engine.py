@@ -55,6 +55,9 @@ class SparkEngine:
         if filenames is None:
             filenames = self.filenames
 
+        if filenames is None:
+            return
+
         def read_one_csv(fpath_, sql_context):
             return sql_context.read.csv(fpath_, header=True, inferSchema=True)
 

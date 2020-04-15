@@ -56,7 +56,7 @@ class ReadingEngine:
         Checks in each indicated aggregated function, and checks that each field within those
         functions is in the dictionary of accepted fields
         :param d: takes the dictionary created by read_config
-        :return: Boolean (true = data is valid). Returns True if all fields are valid
+        :return:
         """
         for category in self.categories:
             if category in d["aggregate"].keys():
@@ -65,8 +65,7 @@ class ReadingEngine:
                         field not in self.fields["counties"]
                         and field not in self.fields["tests"]
                     ):
-                        print("Field not found in dataset")
-                        return False
+                        raise RuntimeError(f"Field '{field}' not found in dataset")
         return True
 
     def get_group_by(self):
@@ -130,7 +129,7 @@ class ReadingEngine:
         """
         This method validates the area entry in the yaml file. The valid options are stored in the list 'accepted'
         :param d: takes the dictionary created by read_config
-        :return: Boolean (true = data is valid). Returns True if the area if valid
+        :return:
         """
         agg = d["aggregate"]
         accepted = ["state", "region", "county"]
@@ -140,10 +139,9 @@ class ReadingEngine:
         if "area" in agg.keys():
             if agg["area"] in accepted:
                 self.area = agg["area"]
-                return True
+                return
             else:
-                print(agg["area"] + " is not accepted as an area.")
-                return False
+                raise RuntimeError(agg["area"] + " is not accepted as an area.")
 
     def get_area(self):
         """
@@ -163,9 +161,8 @@ class ReadingEngine:
             d["aggregate"]["area"] == "county"
             and "data/tests-by-state.csv" in self.file_picker()
         ):
-            print("Testing data is not available at the county level.")
-            return False
-        return True
+            raise RuntimeError("Testing data is not available at the county level.")
+        return
 
     def window_checker(self, d):
         """
@@ -179,28 +176,10 @@ class ReadingEngine:
         """
         agg = d["aggregate"]
         if "window" not in agg.keys():
-            return True
-        if "window" in agg.keys():
-            if (
-                "start_date" in agg["window"].keys()
-                and "end_date" in agg["window"].keys()
-            ):
-                if self.date_checker(agg["window"]):
-                    if self.timing_checker(agg["window"]):
-                        return True
-                    else:
-                        print(
-                            "Your end_date comes before your start_date. Correct the issue in order to proceed."
-                        )
-                        return False
-                else:
-                    print(
-                        "One or both of your dates is invalid. Reformat to follow: mm/dd/yyyy"
-                    )
-                    return False
-            else:
-                print("Window is missing 'start_date' and/or 'end_date'")
-                return False
+            raise RuntimeError("Missing 'window' argument")
+        else:
+            self.date_checker(agg["window"])
+            self.timing_checker(agg["window"])
 
     def date_checker(self, date_data):
         """
@@ -218,9 +197,8 @@ class ReadingEngine:
             try:
                 datetime.datetime(int(year), int(month), int(day))
             except ValueError:
-                print("The dates you entered are invalid")
-                return False
-        return True
+                raise RuntimeError(f"Invalid dates entered {date} must be in format mm/dd/yyyy")
+        return
 
     def timing_checker(self, date_data):
         """
@@ -228,7 +206,9 @@ class ReadingEngine:
         :param date_data: Takes in a section of the yaml file dictionary from window_checker
         :return: Boolean (true = data is valid). Returns True if start_date is before or equal to end_date
         """
-        return date_data["start_date"] <= date_data["end_date"]
+        if not date_data["start_date"] <= date_data["end_date"]:
+            raise RuntimeError("Invalid Window: start date after end date")
+        return
 
     def get_compare(self):
         if "compare" in self.data["aggregate"].keys():
@@ -267,10 +247,9 @@ class ReadingEngine:
             or ".csv" in d["output_method"]
             or ".txt" in d["output_method"]
         ):
-            return True
+            return
         else:
-            print("Invalid output method")
-            return False
+            raise RuntimeError("Invalid output method")
 
     def get_output(self):
         """
@@ -297,13 +276,9 @@ class ReadingEngine:
         """
         filepath = "config_files/" + self.file_name
         data = self.read_config(filepath)
-        if (
-            self.window_checker(data)
-            and self.field_checker(data)
-            and self.output_checker(data)
-            and self.area_checker(data)
-            and self.county_test_checker(data)
-        ):
-            return data
-        else:
-            raise RuntimeError("Error reading config file")
+        self.window_checker(data)
+        self.field_checker(data)
+        self.output_checker(data)
+        self.area_checker(data)
+        self.county_test_checker(data)
+        return data
