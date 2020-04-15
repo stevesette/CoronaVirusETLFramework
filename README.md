@@ -1,6 +1,6 @@
 # CoronaVirusETLFramework
 Final Project for DS_4300 by Tim Lexa, Caelan Schneider, Steve Setteducati Jr., and Jack Tonina <br />
-Demo Video: https://www.youtube.com/watch?v=1SfJoIcZ0M0
+Demo Video: https://www.youtube.com/watch?v=1SfJoIcZ0M0 <br />
 Presentation: https://docs.google.com/presentation/d/17F11slKvWAxjm3LhkSH-uFt0maV1THv2Hw823_HHr3g/edit?usp=sharing
 
 ## Introduction
