@@ -21,6 +21,19 @@ We used YAML files to feed input into our program which allows for this tool to 
 
 Originally we hoped to be able to find more datasets that would be complete and compatible enough in order to also work into this framework, but we realized that completeness of data was more important than additional sources. Many of the other datasets we came across were either missing too much data to be useful or organized in a manner that would be too complex to write into a flexible program. However, looking back on our original goals of the project we were able to successfully check a majority of the boxes. We created a program that (1) consumes, manipulates and joins multiple large data sets , (2) calculates and aggregates various metrics from across both data sets and (3) transforms and outputs aggregated data to multiple output output types (terminal, .csv file, .txt file).
 
+## YAML Input Fields and Specifications:
+| Filter Fields | Inputs / Requirements |
+| ------------- | --------------------- |
+| output_method | terminal, filename.csv, filename.txt |
+| area | county, state, region |
+| window (start date & end date) | mm/dd/yyyy formatted dates |
+| compare (for compare.yaml only) | Takes in unlimited values all belonging to one area type (i.e. unlimited counties, states, regions) |
+| Aggregation Methods: | Min, max, mean, sum |
+| Available Fields: | cases, deaths, new_cases, new_deaths, mortality_rate, mortality_rate_delta, new_cases_delta, new_deaths_delta, positive*, negative*, total_results, total_tests, test_positive_rate, test_negative_rate |
+
+*positive and negative in ‘Available Fields’ refers to positive and negative test results 
+
+
 The rules that each YAML file should adhere to are as follows:
 1. Each YAML file must have a specified output method.
 1. Each YAML file must have a specified area.
